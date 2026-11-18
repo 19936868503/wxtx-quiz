@@ -125,10 +125,14 @@
   <section id="v-home">
     <div class="grid" id="statGrid"></div>
 
-    <button class="btn" onclick="startQuiz('all')">开始刷题（全部 36 题）</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+      <span class="muted" style="flex:0 0 auto">每轮抽</span>
+      <div class="chips" id="countChips" style="margin-top:0"></div>
+    </div>
+    <button class="btn" id="startBtn" onclick="startQuiz('all')">开始刷题</button>
     <div style="display:flex;gap:10px">
-      <button class="btn ghost" style="margin-top:10px" onclick="startQuiz('wrong')">刷错题</button>
-      <button class="btn ghost" style="margin-top:10px" onclick="startQuiz('unmastered')">刷未掌握</button>
+      <button class="btn ghost" style="margin-top:10px" onclick="startQuiz('wrong')" id="wrongBtn">刷错题</button>
+      <button class="btn ghost" style="margin-top:10px" onclick="startQuiz('unmastered')" id="unmBtn">刷未掌握</button>
     </div>
 
     <h2 class="sec">按章节刷</h2>
@@ -226,9 +230,9 @@ let S = load();
 function load(){
   try{
     const raw = JSON.parse(localStorage.getItem(KEY));
-    if(raw && raw.stats) return {stats:raw.stats, set:Object.assign({mastery:2}, raw.set||{})};
+    if(raw && raw.stats) return {stats:raw.stats, set:Object.assign({mastery:2, count:15}, raw.set||{})};
   }catch(e){}
-  return {stats:{}, set:{mastery:2}};
+  return {stats:{}, set:{mastery:2, count:15}};
 }
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
 function st(id){
@@ -285,7 +289,16 @@ function renderHome(){
   }).join('');
   $('chapChips').innerHTML = chips;
   $('wbCount').textContent = wbCount ? wbCount+' 题' : '暂无';
+
+  const cnt = S.set.count|0;
+  $('countChips').innerHTML = [10,15,20,0].map(n=>
+    `<div class="chip ${cnt===n?'on':''}" onclick="setCount(${n})">${n?n+' 题':'全部'}</div>`).join('');
+  $('startBtn').textContent = cnt ? `开始刷题（随机抽 ${cnt} 题）` : `开始刷题（全部 ${BANK.length} 题）`;
+  const umN = BANK.filter(q=>!mastered(q.id)).length;
+  $('wrongBtn').textContent = '刷错题' + (wbCount?` (${wbCount})`:'');
+  $('unmBtn').textContent = '刷未掌握' + (umN?` (${umN})`:'');
 }
+function setCount(n){ S.set.count=n; save(); renderHome(); }
 
 /* ---------- quiz ---------- */
 let quiz=null, lastMode='all', lastArg=null;
@@ -303,8 +316,10 @@ function pick(mode, arg){
   return pool;
 }
 function startQuiz(mode, arg){
-  const pool=pick(mode, arg);
-  if(!pool.length){ toast(mode==='wrong'?'还没有错题，先去刷题吧':'没有可刷的题目'); return; }
+  let pool=pick(mode, arg);
+  if(!pool.length){ toast(mode==='wrong'?'还没有错题，先去刷题吧':(mode==='unmastered'?'全部已掌握 🎉':'没有可刷的题目')); return; }
+  const n = S.set.count|0;
+  if(n>0 && mode!=='roundwrong' && pool.length>n) pool = pool.slice(0, n);
   lastMode = mode==='roundwrong' ? 'roundwrong' : mode;
   lastArg = arg;
   quiz = {mode, pool, idx:0, sel:[], answered:false, wrongIds:[], right:0, total:0};
@@ -460,7 +475,7 @@ async function exportData(){
 function importData(){
   const t=$('impBox').value.trim(); if(!t) return;
   try{ const j=JSON.parse(t); if(!j.stats) throw 0;
-    S={stats:j.stats, set:Object.assign({mastery:2}, j.set||{})}; save(); toast('导入成功'); goHome();
+    S={stats:j.stats, set:Object.assign({mastery:2, count:15}, j.set||{})}; save(); toast('导入成功'); goHome();
   }catch(e){ toast('格式不对'); }
 }
 
