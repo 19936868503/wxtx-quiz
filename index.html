@@ -153,7 +153,8 @@
 
     <footer>
       题库来源：雨课堂「无线通信」第1~8章测试<br>
-      官方答案 28 题 · 推导答案 8 题 · 解析为补充编写
+      官方答案 28 题 · 推导答案 8 题 · 解析为补充编写<br>
+      <span style="opacity:.7">v2 · 每轮随机抽题</span>
     </footer>
   </section>
 
@@ -203,6 +204,10 @@
             <option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option>
           </select>
         </div>
+      </div>
+      <div class="rowline">
+        <div class="l">刷新到最新版本</div>
+        <div class="r"><button class="btn dim" style="padding:8px 14px;margin:0;width:auto;font-size:13px" onclick="forceUpdate()">更新</button></div>
       </div>
       <div class="rowline">
         <div class="l">清空全部记录</div>
@@ -481,7 +486,27 @@ function importData(){
 
 /* ---------- init ---------- */
 renderHome(); show('home');
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js', {updateViaCache:'none'})
+    .then(reg => { reg.update().catch(()=>{}); })
+    .catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(sessionStorage.getItem('sw_reloaded')) return;
+    sessionStorage.setItem('sw_reloaded','1');
+    location.reload();
+  });
+}
+
+async function forceUpdate(){
+  try{
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r=>r.unregister()));
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+  }catch(e){}
+  location.replace(location.pathname + '?t=' + Date.now());
+}
 </script>
 </body>
 </html>
