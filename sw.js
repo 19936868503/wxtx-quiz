@@ -1,4 +1,4 @@
-const CACHE = 'wxtx-v2';
+const CACHE = 'wxtx-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
