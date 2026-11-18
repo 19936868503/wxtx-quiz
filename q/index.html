@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<title>无线通信 · 刷题</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="无线刷题">
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#fff; --fg:#14161a; --sub:#6b7280; --line:#e6e8ec;
+    --pri:#1f6feb; --pri-soft:#e8f0fe; --ok:#16a34a; --ok-soft:#e7f7ed;
+    --bad:#dc2626; --bad-soft:#fdeaea; --warn:#d97706; --radius:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1115; --card:#181b21; --fg:#e8eaee; --sub:#9aa1ac; --line:#262a32;
+      --pri:#4b8ef7; --pri-soft:#13233d; --ok:#34d399; --ok-soft:#10261c; --bad:#f87171; --bad-soft:#2a1414; --warn:#fbbf24; }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px 40px}
+  header.top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#1f6feb,#5b3df5);
+    color:#fff;padding:18px 16px 16px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px rgba(31,111,235,.25)}
+  .top .row{display:flex;align-items:center;gap:10px;max-width:720px;margin:0 auto}
+  .top h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.3px}
+  .top .sub{font-size:12px;opacity:.85;margin-top:3px}
+  .back{background:rgba(255,255,255,.18);border:0;color:#fff;width:34px;height:34px;border-radius:11px;
+    font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;margin-top:14px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.04)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+  .stat{background:var(--card);border-radius:14px;padding:12px 6px;text-align:center;
+    box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.04)}
+  .stat b{display:block;font-size:20px;line-height:1.2}
+  .stat span{font-size:11px;color:var(--sub)}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:14px;
+    padding:15px 14px;font-size:16px;font-weight:600;background:var(--pri);color:#fff;margin-top:10px;
+    transition:transform .06s ease, opacity .15s}
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{background:var(--pri-soft);color:var(--pri)}
+  .btn.dim{background:var(--card);color:var(--fg);border:1px solid var(--line)}
+  .btn[disabled]{opacity:.45}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:9px 14px;font-size:13px;
+    color:var(--fg);display:flex;gap:6px;align-items:center}
+  .chip .n{font-size:11px;color:var(--sub)}
+  .chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+  .chip.on .n{color:rgba(255,255,255,.8)}
+  h2.sec{font-size:14px;color:var(--sub);font-weight:600;margin:22px 4px 0}
+  .qhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .tag{font-size:11px;padding:4px 9px;border-radius:8px;background:var(--pri-soft);color:var(--pri);font-weight:600}
+  .tag.multi{background:#fff4e5;color:#b45309}
+  @media (prefers-color-scheme: dark){ .tag.multi{background:#2a1f0d;color:#fbbf24} }
+  .prog{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin:12px 0 0}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,#1f6feb,#7c3aed);width:0;transition:width .25s}
+  .qtext{font-size:17.5px;line-height:1.62;margin:14px 0 4px;font-weight:600;white-space:pre-wrap}
+  .opt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;
+    padding:14px 14px;margin-top:10px;font-size:15.5px;line-height:1.5;background:var(--card);cursor:pointer;
+    transition:border-color .12s, background .12s}
+  .opt .k{flex:0 0 26px;height:26px;border-radius:8px;background:var(--bg);color:var(--sub);font-size:13px;
+    font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .opt.sel{border-color:var(--pri);background:var(--pri-soft)}
+  .opt.sel .k{background:var(--pri);color:#fff}
+  .opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+  .opt.ok .k{background:var(--ok);color:#fff}
+  .opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+  .opt.bad .k{background:var(--bad);color:#fff}
+  .fb{margin-top:14px;border-radius:14px;padding:14px;border:1px solid var(--line)}
+  .fb.ok{background:var(--ok-soft);border-color:transparent}
+  .fb.bad{background:var(--bad-soft);border-color:transparent}
+  .fb .ttl{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+  .fb.ok .ttl{color:var(--ok)} .fb.bad .ttl{color:var(--bad)}
+  .fb .ans{margin-top:8px;font-size:14px;color:var(--fg)}
+  .fb .exp{margin-top:10px;font-size:14.5px;line-height:1.7;color:var(--fg);white-space:pre-wrap}
+  .fb .cnt{margin-top:10px;font-size:12.5px;color:var(--sub)}
+  .muted{color:var(--sub);font-size:13px}
+  .rowline{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line);gap:10px}
+  .rowline:last-child{border-bottom:0}
+  .rowline .l{font-size:15px}
+  .rowline .r{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:8px}
+  .badge{font-size:11.5px;padding:3px 8px;border-radius:999px;font-weight:700}
+  .badge.w{background:var(--bad-soft);color:var(--bad)}
+  .badge.g{background:var(--ok-soft);color:var(--ok)}
+  .badge.n{background:var(--line);color:var(--sub)}
+  .listitem{padding:13px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+  .listitem:last-child{border-bottom:0}
+  .listitem .t{font-size:14.5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .listitem .m{font-size:12px;color:var(--sub);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--sub);font-size:14px;padding:28px 0}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:rgba(20,22,26,.92);
+    color:#fff;font-size:13.5px;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:all .22s;z-index:99;max-width:86vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hidden{display:none!important}
+  .bigres{text-align:center;padding:8px 0 2px}
+  .bigres .p{font-size:44px;font-weight:800;line-height:1.1}
+  .bigres .s{color:var(--sub);font-size:13px;margin-top:6px}
+  input[type=number],select{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:14px}
+  textarea{width:100%;min-height:90px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:12px;font-family:ui-monospace,monospace}
+  footer{text-align:center;color:var(--sub);font-size:11.5px;margin-top:26px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<header class="top" id="topbar">
+  <div class="row">
+    <button class="back hidden" id="backBtn" onclick="goBack()">‹</button>
+    <div style="flex:1">
+      <h1 id="ttl">无线通信 · 刷题</h1>
+      <div class="sub" id="sub">梁明珅 · 36 道选择题</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <section id="v-home">
+    <div class="grid" id="statGrid"></div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+      <span class="muted" style="flex:0 0 auto">每轮抽</span>
+      <div class="chips" id="countChips" style="margin-top:0"></div>
+    </div>
+    <button class="btn" id="startBtn" onclick="startQuiz('all')">开始刷题</button>
+    <div style="display:flex;gap:10px">
+      <button class="btn ghost" style="margin-top:10px" onclick="startQuiz('wrong')" id="wrongBtn">刷错题</button>
+      <button class="btn ghost" style="margin-top:10px" onclick="startQuiz('unmastered')" id="unmBtn">刷未掌握</button>
+    </div>
+
+    <h2 class="sec">按章节刷</h2>
+    <div class="chips" id="chapChips"></div>
+
+    <h2 class="sec">更多</h2>
+    <div class="card" style="padding:6px 16px">
+      <div class="rowline" onclick="showWrongbook()">
+        <div class="l">错题本</div><div class="r" id="wbCount"></div>
+      </div>
+      <div class="rowline" onclick="showAllStats()">
+        <div class="l">全部题目 · 答错统计</div><div class="r">›</div>
+      </div>
+      <div class="rowline" onclick="showSettings()">
+        <div class="l">设置与数据备份</div><div class="r">›</div>
+      </div>
+    </div>
+
+    <footer>
+      题库来源：雨课堂「无线通信」第1~8章测试<br>
+      官方答案 28 题 · 推导答案 8 题 · 解析为补充编写<br>
+      <span style="opacity:.7">v2 · 每轮随机抽题</span>
+    </footer>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="v-quiz" class="hidden">
+    <div class="card" style="padding:14px 16px">
+      <div class="qhead">
+        <span class="tag" id="qTag">第1章</span>
+        <span class="muted" id="qProg">1 / 36</span>
+      </div>
+      <div class="prog"><i id="qBar"></i></div>
+      <div class="qtext" id="qText"></div>
+      <div id="qOpts"></div>
+      <div id="qFb"></div>
+      <button class="btn hidden" id="qSubmit" onclick="submitMulti()">提交答案</button>
+      <button class="btn hidden" id="qNext" onclick="nextQ()">下一题</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="v-result" class="hidden">
+    <div class="card">
+      <div class="bigres">
+        <div class="p" id="rPct">0%</div>
+        <div class="s" id="rSub"></div>
+      </div>
+      <div id="rWrongList"></div>
+      <button class="btn" onclick="retryWrongRound()" id="rRetryBtn">只刷本轮错题</button>
+      <button class="btn ghost" onclick="startQuiz(lastMode)">再来一轮</button>
+      <button class="btn dim" onclick="goHome()">回首页</button>
+    </div>
+  </section>
+
+  <!-- LIST (wrongbook / all) -->
+  <section id="v-list" class="hidden">
+    <div class="card" style="padding:6px 16px" id="listBox"></div>
+    <div class="card hidden" id="detailBox"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="v-settings" class="hidden">
+    <div class="card">
+      <div class="rowline">
+        <div class="l">连续答对几次算「掌握」</div>
+        <div class="r">
+          <select id="setMastery" onchange="setMastery(this.value)">
+            <option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option>
+          </select>
+        </div>
+      </div>
+      <div class="rowline">
+        <div class="l">刷新到最新版本</div>
+        <div class="r"><button class="btn dim" style="padding:8px 14px;margin:0;width:auto;font-size:13px" onclick="forceUpdate()">更新</button></div>
+      </div>
+      <div class="rowline">
+        <div class="l">清空全部记录</div>
+        <div class="r"><button class="btn dim" style="padding:8px 14px;margin:0;width:auto;font-size:13px" onclick="resetAll()">清空</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="l" style="font-weight:600;margin-bottom:8px">数据备份（换手机不丢）</div>
+      <button class="btn ghost" onclick="exportData()">导出备份（复制到剪贴板）</button>
+      <div class="muted" style="margin:14px 0 6px">粘贴备份内容后导入覆盖：</div>
+      <textarea id="impBox" placeholder='{"stats":{...}}'></textarea>
+      <button class="btn dim" onclick="importData()">导入并覆盖</button>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BANK = [{"id":"c1-1","ch":"第1章","paper":"第1章 随堂测试","type":"single","q":"以下无线通信技术不能算作中短距离无线通信技术的是","opts":[["A","WiFi通信技术"],["B","蓝牙通信技术"],["C","5G移动通信技术"],["D","UWB通信技术"]],"ans":["C"],"exp":"5G 面向广域蜂窝覆盖，属中远距离移动通信；WiFi、蓝牙、UWB 作用距离都在几十米内，属中短距离无线技术。","answerSource":"derived"},{"id":"c1-2","ch":"第1章","paper":"第1章 随堂测试","type":"single","q":"有一个2.4GHz的WiFi路由器，试计算在10米位置的信号衰减是多少？","opts":[["A","120dB"],["B","80dB"],["C","30dB"],["D","40dB"]],"ans":["A"],"exp":"按课程公式 L(dB)=32.44+20lg f(MHz)+20lg d，f=2400、d=10 代入得 32.44+67.60+20≈120 dB（本题按 d 以米代入的口径）。注意：若严格按 d 以 km 代入（0.01 km），结果为约 60 dB。","answerSource":"derived"},{"id":"c1-3","ch":"第1章","paper":"第1章 随堂测试","type":"single","q":"以下关于统计信道模型和确定性信道模型的描述错误的是","opts":[["A","统计信道模型需要大量的信道测量数据"],["B","射线追踪是一种统计信道模型建模方法"],["C","统计信道建模可以不知道信道物理空间信息"],["D","确定性信道建模必须知道信道物理空间信息"]],"ans":["B"],"exp":"射线追踪依据几何光学与电磁理论推导多径，属确定性建模；统计模型靠大量实测数据拟合、可不依赖空间信息，确定性模型必须已知环境几何与材质。故 B 错误。","answerSource":"derived"},{"id":"c2-1","ch":"第2章","paper":"第2章 随堂测验","type":"multi","q":"蓝牙协议种规定了哪几种链路类型？","opts":[["A","异步无连接（ACL）"],["B","介质访问控制（MAC）"],["C","面向同步的连接（SCL）"],["D","数据链路（DATA LINK）"]],"ans":["A","C"],"exp":"蓝牙基带规定了 ACL（异步无连接，适合数据）与 SCO（面向同步连接，适合语音）两种链路类型；MAC、数据链路不是蓝牙定义的链路类型（题中 SCL 即 SCO 的笔误）。","answerSource":"official"},{"id":"c2-2","ch":"第2章","paper":"第2章 随堂测验","type":"multi","q":"以下哪些是蓝牙的核心协议？","opts":[["A","基带协议（Baseband）"],["B","链路管理协议（LMP）"],["C","逻辑链路控制和适配协议（L2CAP）"],["D","服务发现协议（SDP）"]],"ans":["A","B","C","D"],"exp":"蓝牙核心协议包含基带(Baseband)、链路管理(LMP)、逻辑链路控制与适配(L2CAP)、服务发现(SDP)，以及主机控制器接口(HCI)等，四项均属核心协议。","answerSource":"official"},{"id":"c2-3","ch":"第2章","paper":"第2章 随堂测验","type":"single","q":"以下关于蓝牙微微网的描述错误的是","opts":[["A","在同一微微网中，所有设备单元均采用同一跳频序列。"],["B","主设备单元负责提供时钟同步信号和跳频序列"],["C","散射网是由几个独立且不同步的微微网构成的"],["D","一个微微网中的主设备单元同时不可以作为另一个微微网中的从设备单元"]],"ans":["D"],"exp":"一个微微网的主设备可以作为另一个微微网的从设备，多个微微网交叠互联构成散射网(scatternet)。因此 D 的说法错误，其余三项正确。","answerSource":"official"},{"id":"c3-1","ch":"第3章","paper":"第3章 随堂测试","type":"single","q":"以下选项中,不属于 WLAN 协议标准的是( )","opts":[["A","WiFi(IEEE 802.11)"],["B","HiperLAN"],["C","HomeRF"],["D","Zigbee"]],"ans":["D"],"exp":"ZigBee 基于 IEEE 802.15.4，是低速率短距离自组网标准，不属于 WLAN；WiFi(IEEE 802.11)、HiperLAN、HomeRF 都是无线局域网标准。","answerSource":"derived"},{"id":"c3-2","ch":"第3章","paper":"第3章 随堂测试","type":"single","q":"以下选项中,不属于 WLAN()拓扑结构的是( )","opts":[["A","令牌环网拓扑结构"],["B","Mesh 结构"],["C","多 AP 结构"],["D","基础架构模式"]],"ans":["A"],"exp":"令牌环网是 IEEE 802.5 有线局域网拓扑，属 LAN 而非 WLAN 拓扑；WLAN 常见基础架构(BSS/ESS)、Ad hoc(IBSS)、多 AP、Mesh 等结构。","answerSource":"derived"},{"id":"c3-3","ch":"第3章","paper":"第3章 随堂测试","type":"single","q":"IEEE 802.11 系列标准中,首次引入 OFDM(正交频分复用)技术的是( )","opts":[["A","802.11b"],["B","802.11a"],["C","802.11n"],["D","802.11ac"]],"ans":["B"],"exp":"802.11a 在 5 GHz 频段首次引入 OFDM；802.11b 用 DSSS/CCK，802.11g 沿用 OFDM，802.11n 为 OFDM+MIMO。","answerSource":"derived"},{"id":"c3-4","ch":"第3章","paper":"第3章 随堂测试","type":"single","q":"802.11n 相比 802.11a/g 大幅提升传输速率,其采用的核心物理层技术是( )","opts":[["A","FHSS"],["B","CCK"],["C","MIMO"],["D","红外传输"]],"ans":["C"],"exp":"802.11n 的核心是 MIMO（多输入多输出空间复用）加 40 MHz 信道绑定，理论速率可达 600 Mbit/s；FHSS/CCK 属早期技术，红外不是 802.11n 的物理层方案。","answerSource":"derived"},{"id":"c3-5","ch":"第3章","paper":"第3章 随堂测试","type":"single","q":"WLAN 的 MAC 层采用的介质访问控制机制是( )","opts":[["A","CSMA/CD"],["B","CSMA/CA"],["C","TDMA"],["D","FDMA"]],"ans":["B"],"exp":"无线信道难以像以太网那样边发边听来检测碰撞，因此 WLAN 的 MAC 层采用 CSMA/CA（载波监听多路访问/冲突避免），用退避与确认机制避免冲突。","answerSource":"derived"},{"id":"c4-1","ch":"第4章","paper":"第4章测试","type":"single","q":"\"LoRa\" 一词的来源是( )","opts":[["A","Low Radiation,低辐射"],["B","Long Range,远距离"],["C","Local Radio,本地无线电"],["D","Large Rate,高速率"]],"ans":["B"],"exp":"LoRa = Long Range，强调远距离、低功耗，是 Semtech 的 Chirp 扩频调制技术。","answerSource":"official"},{"id":"c4-2","ch":"第4章","paper":"第4章测试","type":"single","q":"LoRa 物理层所采用的扩频调制技术属于( )","opts":[["A","直接序列扩频(DSSS)"],["B","跳频扩频(FHSS)"],["C","线性调频扩频(CSS,Chirp Spread Spectrum)"],["D","正交频分复用(OFDM)"]],"ans":["C"],"exp":"LoRa 物理层采用线性调频扩频(CSS)，用频率随时间线性变化的 Chirp 脉冲承载信息，抗干扰强、灵敏度高（可达 -148 dBm 量级）。","answerSource":"official"},{"id":"c4-3","ch":"第4章","paper":"第4章测试","type":"single","q":"在 LoRa 调制中,把扩频因子由 SF7 增大到 SF12,下列说法正确的是( )","opts":[["A","数据速率提高,接收灵敏度下降"],["B","数据速率降低,接收灵敏度提高,空中传输时间变长"],["C","占用带宽变宽,抗干扰能力下降"],["D","对传输距离没有影响,仅影响编码率"]],"ans":["B"],"exp":"扩频因子 SF 增大，每符号携带比特数增多、码率降低；接收灵敏度提升（约 2.5 dB/级）、抗干扰更强，但空口速率下降、空中传输时间变长、功耗增加。","answerSource":"official"},{"id":"c4-4","ch":"第4章","paper":"第4章测试","type":"single","q":"LoRaWAN 网络由终端节点、网关、网络服务器和应用服务器四部分组成。其中功能上对应于移动通信网中移动交换中心(MSC)的是( )","opts":[["A","终端节点"],["B","网关"],["C","网络服务器"],["D","应用服务器"]],"ans":["C"],"exp":"LoRaWAN 中网关只做射频到 IP 的透明转发，网络服务器负责去重、鉴权、MAC 层调度与网关管理，功能上对应移动核心网的 MSC；应用服务器处理业务数据。","answerSource":"official"},{"id":"c4-5","ch":"第4章","paper":"第4章测试","type":"single","q":"某 LoRa 系统占用带宽为 125 kHz,采用 SF7 扩频时数据速率约为 5.5 kbit/s,则该系统的处理增益约为( )","opts":[["A","3 dB"],["B","13.7 dB"],["C","21 dB"],["D","30 dB"]],"ans":["B"],"exp":"处理增益 G=10lg(B/Rb)=10lg(125 kHz ÷ 5.5 kbit/s)=10lg22.7≈13.6 dB，故选 13.7 dB。","answerSource":"official"},{"id":"c5-1","ch":"第5章","paper":"第5章测试","type":"single","q":"按照 FCC 的定义,一个信号被称为超宽带(UWB)信号的条件是( )","opts":[["A","相对带宽大于 20%,或 −10 dB 绝对带宽大于 500 MHz"],["B","相对带宽大于 25%,或 −20 dB 绝对带宽大于 1.5 GHz"],["C","相对带宽大于 10% 且绝对带宽大于 100 MHz"],["D","载波中心频率高于 10 GHz"]],"ans":["A"],"exp":"FCC 定义：相对带宽（2(fH−fL)/(fH+fL)）大于 20%，或 −10 dB 绝对带宽大于 500 MHz，即为超宽带信号。","answerSource":"official"},{"id":"c5-2","ch":"第5章","paper":"第5章测试","type":"single","q":"根据 FCC Part 15 规定,UWB 通信系统可使用的频段及其辐射谱密度上限分别为( )","opts":[["A","3.1~10.6 GHz,−41.3 dBm/MHz"],["B","2.4~2.4835 GHz,0 dBm/MHz"],["C","57~64 GHz,−41.3 dBm/MHz"],["D","3.1~10.6 GHz,+10 dBm/MHz"]],"ans":["A"],"exp":"FCC Part 15 开放 3.1~10.6 GHz 给 UWB 民用，等效全向辐射功率谱密度限值 −41.3 dBm/MHz，以避免干扰既有窄带系统。","answerSource":"official"},{"id":"c5-3","ch":"第5章","paper":"第5章测试","type":"single","q":"UWB 系统能够实现高精度测距与定位,其根本原因是( )","opts":[["A","发射功率大,信噪比高"],["B","采用极窄脉冲,信号持续时间极短,时间(空间)分辨率高,可分辨多径信号"],["C","载波频率高,波长短,天线增益大"],["D","采用 OFDM 调制,频谱效率高"]],"ans":["B"],"exp":"UWB 用纳秒级极窄脉冲，信号持续时间极短，时间（空间）分辨率极高，可分辨密集多径，从而实现厘米级测距与定位。","answerSource":"official"},{"id":"c5-4","ch":"第5章","paper":"第5章测试","type":"single","q":"关于 60 GHz 毫米波信号的传播特点,下列说法正确的是( )","opts":[["A","绕射能力强,适合非视距广覆盖"],["B","氧气吸收损耗高(可达 7~15.5 dB/km),路径损耗大,绕射与穿透能力差,主要适合短距离视距通信"],["C","与 2.4 GHz 相比路径损耗更小,约低 28 dB"],["D","不受人体、墙壁等障碍物遮挡的影响"]],"ans":["B"],"exp":"60 GHz 位于氧分子吸收峰，大气吸收损耗可达 7~15.5 dB/km，加上自由空间损耗大、绕射与穿透能力差，因此主要适合短距离视距高速通信（如 802.11ad）。","answerSource":"official"},{"id":"c5-5","ch":"第5章","paper":"第5章测试","type":"single","q":"面向 60 GHz 频段无线局域网()的 IEEE 标准是( )","opts":[["A","IEEE 802.11n"],["B","IEEE 802.11ad"],["C","IEEE 802.15.4"],["D","IEEE 802.16"]],"ans":["B"],"exp":"60 GHz 频段无线局域网标准为 IEEE 802.11ad（后续演进 802.11ay）；802.11n 为 2.4/5 GHz，802.15.4 是低速率个域网，802.16 是宽带无线接入。","answerSource":"official"},{"id":"c6-1","ch":"第6章","paper":"第6章测试","type":"single","q":"NFC 的工作频率和典型作用距离分别为( )","opts":[["A","13.56 MHz,约 10 cm(标准规定最远约 20 cm)"],["B","2.4 GHz,约 10 m"],["C","125 kHz,约 1 m"],["D","5.8 GHz,约 20 cm"]],"ans":["A"],"exp":"NFC 工作在 13.56 MHz ISM 频段，典型作用距离约 10 cm（标准规定最远约 20 cm），速率 106/212/424 kbit/s。","answerSource":"official"},{"id":"c6-2","ch":"第6章","paper":"第6章测试","type":"single","q":"下列各项中,不属于NFC 标准所定义的三种应用/工作模式的是( )","opts":[["A","卡模拟模式(Card Emulation)"],["B","读写器模式(Reader/Writer)"],["C","点对点模式(P2P)"],["D","全双工中继模式(Full-duplex Relay)"]],"ans":["D"],"exp":"NFC 定义卡模拟、读写器、点对点三种工作模式，不存在“全双工中继模式”。","answerSource":"official"},{"id":"c6-3","ch":"第6章","paper":"第6章测试","type":"single","q":"在 NFC 被动通信模式中,目标设备(从设备)不产生自己的射频场,而是采用( )技术把数据回传给发起设备","opts":[["A","负载调制(Load Modulation)"],["B","独立射频场发送"],["C","跳频调制"],["D","多载波 OFDM 调制"]],"ans":["A"],"exp":"被动模式下目标设备不带电源与射频发生器，通过改变天线负载（负载调制）影响发起设备射频场的幅度/相位，从而把数据回传。","answerSource":"official"},{"id":"c6-4","ch":"第6章","paper":"第6章测试","type":"single","q":"关于近场与远场信号的传播衰减规律,下列表述正确的是( )","opts":[["A","近场按 1/d⁶ 衰减,远场按 1/d² 衰减"],["B","近场按 1/d² 衰减,远场按 1/d⁶ 衰减"],["C","近场与远场均按 1/d² 衰减"],["D","近场不衰减,远场按 1/d 衰减"]],"ans":["A"],"exp":"近场（感应场）磁场强度按 1/d³ 衰减、功率密度按 1/d⁶；远场（辐射场）功率密度按 1/d² 衰减。NFC 正是利用近场 1/d⁶ 的快速衰减实现天然的安全距离。","answerSource":"official"},{"id":"c6-5","ch":"第6章","paper":"第6章测试","type":"single","q":"与蓝牙、红外等短距离技术相比,NFC 的主要特点是( )","opts":[["A","传输速率最高,可传输音视频流"],["B","作用距离最远,可达数十米"],["C","建立连接快（<0.1 s）、安全性由硬件保证，但速率低、距离近，主要用于交换敏感信息与快速配对"],["D","完全取代蓝牙与 Wi-Fi,实现全场景覆盖"]],"ans":["C"],"exp":"NFC 建立连接极快（<0.1 s）、安全性由硬件（SE/eSE）保障，但速率低、距离近，常用于门禁、支付、快速配对；它并不取代蓝牙/WiFi。","answerSource":"official"},{"id":"c7-1","ch":"第7章","paper":"第7章测试","type":"single","q":"表示\"车辆与行人之间\"通信的 V2X 类型是( )","opts":[["A","V2V"],["B","V2I"],["C","V2P"],["D","V2N"]],"ans":["C"],"exp":"V2X 包含 V2V（车-车）、V2I（车-基础设施）、V2P（车-行人）、V2N（车-网络），车辆与行人之间为 V2P。","answerSource":"official"},{"id":"c7-2","ch":"第7章","paper":"第7章测试","type":"single","q":"目前主流的两种 V2X 技术标准及其特点,下列表述正确的是( )","opts":[["A","DSRC 与 C-V2X;其中 C-V2X 由我国主导、基于蜂窝技术提出,可复用现有蜂窝网络设施"],["B","DSRC 与 C-V2X;其中 DSRC 基于蜂窝技术,C-V2X 基于 WLAN"],["C","LTE-V2X 与 5G-V2X;二者均完全不需要路侧设施"],["D","只有 C-V2X 一种标准,DSRC 已被淘汰"]],"ans":["A"],"exp":"两大技术路线：DSRC（基于 IEEE 802.11p/WLAN，欧美主推）与 C-V2X（基于蜂窝，我国主导，可复用现有蜂窝网络与基站设施）。","answerSource":"official"},{"id":"c7-3","ch":"第7章","paper":"第7章测试","type":"single","q":"LTE-V2X 的两种通信方式是( )","opts":[["A","基于 PC5 接口的直通式(短距离)与基于 Uu 接口的蜂窝式(远距离)"],["B","基于 PC5 接口的蜂窝式与基于 Uu 接口的直通式"],["C","蓝牙与 Wi-Fi 两种模式"],["D","单播与组播两种模式"]],"ans":["A"],"exp":"LTE-V2X 有两种通信方式：PC5 接口直通（短距离、低时延、可脱网）与 Uu 接口蜂窝（远距离、需基站覆盖）。","answerSource":"official"},{"id":"c7-4","ch":"第7章","paper":"第7章测试","type":"single","q":"LTE-V2X 的 Sidelink 定义了 4 种物理信道,其中用于传输用户数据的是( )","opts":[["A","PSBCH(Sidelink 广播信道)"],["B","PSCCH(Sidelink 控制信道)"],["C","PSDCH(Sidelink 发现信道)"],["D","PSSCH(Sidelink 共享信道)"]],"ans":["D"],"exp":"Sidelink 定义四种物理信道：PSBCH 广播、PSCCH 控制、PSDCH 发现、PSSCH 共享信道——其中 PSSCH 承载用户数据。","answerSource":"official"},{"id":"c7-5","ch":"第7章","paper":"第7章测试","type":"single","q":"5G 的三大应用场景中,面向车联网高可靠、低时延通信需求的是( )","opts":[["A","eMBB"],["B","uRLLC"],["C","mMTC"],["D","NBIoT"]],"ans":["B"],"exp":"5G 三大场景中，uRLLC 面向高可靠低时延（车联网、工业控制）；eMBB 面向大带宽，mMTC 面向海量连接。","answerSource":"official"},{"id":"c8-1","ch":"第8章","paper":"第8章测试","type":"single","q":"下列各项中,不属于Ad hoc 网络特点的是( )","opts":[["A","自组织、无中心,无需事先架设通信基础设施"],["B","网络拓扑动态变化,节点兼具终端与路由器功能,采用多跳转发"],["C","必须依赖基站或接入点等中心设备进行集中管理与资源调度"],["D","无线信道带宽受限、终端设备能量与处理能力受限"]],"ans":["C"],"exp":"Ad hoc 网络无中心、自组织、节点兼具终端与路由器功能、多跳转发；C 描述的“依赖基站/AP 集中管理与调度”是蜂窝网与基础设施 WLAN 的特征，不属于 Ad hoc。","answerSource":"official"},{"id":"c8-2","ch":"第8章","paper":"第8章测试","type":"single","q":"隐藏终端是指( )","opts":[["A","位于接收节点通信范围之内、而在其他发送节点通信范围之外的终端,会造成接收节点处的报文冲突"],["B","位于发送节点通信范围之内、而在接收节点通信范围之外的终端,只引入额外延迟而不造成冲突"],["C","被障碍物遮挡而无法通信的终端"],["D","同时与两个以上节点建立连接的终端"]],"ans":["A"],"exp":"隐藏终端指处在接收节点通信范围内、却不在发送节点通信范围内的终端。发送方听不到它，双方同时发送就会在接收端碰撞。","answerSource":"official"},{"id":"c8-3","ch":"第8章","paper":"第8章测试","type":"single","q":"DSR(Dynamic Source Routing)路由协议属于( )","opts":[["A","表驱动(主动)路由协议,每个节点周期性广播全网路由表"],["B","基于源路由的按需(反应式)路由协议,每个分组头部携带完整路由信息"],["C","分级路由协议,将网络划分为若干虚拟区"],["D","基于链路反转的分布式路由协议"]],"ans":["B"],"exp":"DSR 属按需（反应式）源路由协议：发送前泛洪路由请求，分组头部携带完整路径；表驱动是 DSDV/OLSR，分级路由是 ZRP 等。","answerSource":"official"},{"id":"c8-4","ch":"第8章","paper":"第8章测试","type":"single","q":"DSDV 协议为避免产生路由环路,采用的核心机制是( )","opts":[["A","序列号(Sequence Number)机制"],["B","链路反转机制"],["C","簇头选举机制"],["D","功率控制机制"]],"ans":["A"],"exp":"DSDV 为每条路由维护目的序列号，节点只接受序列号更新的路由，从而识别陈旧路由、避免环路与“计数到无穷”。","answerSource":"official"},{"id":"c8-5","ch":"第8章","paper":"第8章测试","type":"single","q":"关于 Ad hoc 网络的拓扑结构,下列表述正确的是( )","opts":[["A","分为平面结构与分级结构;平面结构所有节点地位平等、较健壮,但可扩充性差,主要用于中小型网络"],["B","只有分级结构一种,必须设置簇头"],["C","平面结构可扩充性好,适合大规模网络"],["D","分级结构中没有簇头与簇成员之分"]],"ans":["A"],"exp":"Ad hoc 拓扑分平面结构与分级结构：平面结构所有节点地位平等、健壮性好，但扩展性差，适合中小型网络；分级结构引入簇头，扩展性好但依赖簇头。","answerSource":"official"}];
+const KEY = 'wxtx_bank_v1';
+const CHAPTERS = [...new Set(BANK.map(q=>q.ch))];
+
+let S = load();
+function load(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(KEY));
+    if(raw && raw.stats) return {stats:raw.stats, set:Object.assign({mastery:2, count:15}, raw.set||{})};
+  }catch(e){}
+  return {stats:{}, set:{mastery:2, count:15}};
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function st(id){
+  if(!S.stats[id]) S.stats[id] = {c:0,w:0,streak:0,last:0};
+  return S.stats[id];
+}
+function mastered(id){ return st(id).streak >= S.set.mastery; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function $(id){ return document.getElementById(id); }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800); }
+
+/* ---------- routing ---------- */
+let view='home', history_=[];
+function show(v){
+  ['home','quiz','result','list','settings'].forEach(x=>{
+    const el=$('v-'+x); if(el) el.classList.toggle('hidden', x!==v);
+  });
+  view=v;
+  const back=$('backBtn');
+  back.classList.toggle('hidden', v==='home');
+  $('ttl').textContent = v==='home' ? '无线通信 · 刷题' : ({quiz:'答题',result:'本轮结果',list:'题目列表',settings:'设置'})[v];
+  $('sub').textContent = v==='home' ? '梁明珅 · '+BANK.length+' 道选择题' :
+      v==='quiz' ? (modeName(lastMode)) : '';
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function goBack(){
+  if(view==='quiz' && quiz && quiz.idx>0){ if(confirm('退出本轮？进度已保存')) goHome(); return; }
+  goHome();
+}
+function goHome(){ quiz=null; renderHome(); show('home'); }
+
+/* ---------- home ---------- */
+function overall(){
+  let done=0, right=0, wrong=0, mast=0;
+  BANK.forEach(q=>{ const s=S.stats[q.id]; if(!s) return;
+    if(s.c+s.w>0) done++;
+    right+=s.c; wrong+=s.w; if(s.streak>=S.set.mastery) mast++; });
+  const total=right+wrong;
+  return {done, right, wrong, mast, acc: total? Math.round(right*100/total):0};
+}
+function renderHome(){
+  const o=overall();
+  const wbCount = BANK.filter(q=>(S.stats[q.id]||{}).w>0).length;
+  $('statGrid').innerHTML = [
+    ['题库', BANK.length, ''],
+    ['已练', o.done, ''],
+    ['正确率', o.acc+'%', ''],
+    ['错题', wbCount, '']
+  ].map(([k,v])=>`<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
+  const chips = CHAPTERS.map(ch=>{
+    const list=BANK.filter(q=>q.ch===ch);
+    const m=list.filter(q=>mastered(q.id)).length;
+    return `<div class="chip" onclick="startQuiz('chapter', '${ch}')">${ch}<span class="n">${m}/${list.length}</span></div>`;
+  }).join('');
+  $('chapChips').innerHTML = chips;
+  $('wbCount').textContent = wbCount ? wbCount+' 题' : '暂无';
+
+  const cnt = S.set.count|0;
+  $('countChips').innerHTML = [10,15,20,0].map(n=>
+    `<div class="chip ${cnt===n?'on':''}" onclick="setCount(${n})">${n?n+' 题':'全部'}</div>`).join('');
+  $('startBtn').textContent = cnt ? `开始刷题（随机抽 ${cnt} 题）` : `开始刷题（全部 ${BANK.length} 题）`;
+  const umN = BANK.filter(q=>!mastered(q.id)).length;
+  $('wrongBtn').textContent = '刷错题' + (wbCount?` (${wbCount})`:'');
+  $('unmBtn').textContent = '刷未掌握' + (umN?` (${umN})`:'');
+}
+function setCount(n){ S.set.count=n; save(); renderHome(); }
+
+/* ---------- quiz ---------- */
+let quiz=null, lastMode='all', lastArg=null;
+function modeName(m){ return {all:'全部题目',chapter:'按章节',wrong:'错题强化',unmastered:'未掌握',roundwrong:'本轮错题'}[m]||'刷题'; }
+
+function pick(mode, arg){
+  let pool=[];
+  if(mode==='all') pool=BANK.slice();
+  else if(mode==='chapter') pool=BANK.filter(q=>q.ch===arg);
+  else if(mode==='wrong') pool=BANK.filter(q=>((S.stats[q.id]||{}).w||0)>0);
+  else if(mode==='unmastered') pool=BANK.filter(q=>!mastered(q.id));
+  else if(mode==='roundwrong') pool=arg.map(id=>BANK.find(q=>q.id===id)).filter(Boolean);
+  if(mode==='wrong'){ pool.sort((a,b)=>((S.stats[b.id]||{}).w||0)-((S.stats[a.id]||{}).w||0)); }
+  else { pool=shuffle(pool); }
+  return pool;
+}
+function startQuiz(mode, arg){
+  let pool=pick(mode, arg);
+  if(!pool.length){ toast(mode==='wrong'?'还没有错题，先去刷题吧':(mode==='unmastered'?'全部已掌握 🎉':'没有可刷的题目')); return; }
+  const n = S.set.count|0;
+  if(n>0 && mode!=='roundwrong' && pool.length>n) pool = pool.slice(0, n);
+  lastMode = mode==='roundwrong' ? 'roundwrong' : mode;
+  lastArg = arg;
+  quiz = {mode, pool, idx:0, sel:[], answered:false, wrongIds:[], right:0, total:0};
+  show('quiz'); renderQ();
+}
+function curQ(){ return quiz.pool[quiz.idx]; }
+function renderQ(){
+  const q=curQ();
+  $('qTag').textContent = q.ch + ' · ' + (q.type==='multi'?'多选':'单选');
+  $('qTag').className = 'tag' + (q.type==='multi'?' multi':'');
+  $('qProg').textContent = (quiz.idx+1)+' / '+quiz.pool.length;
+  $('qBar').style.width = Math.round(quiz.idx*100/quiz.pool.length)+'%';
+  $('qText').textContent = q.q;
+  quiz.sel=[]; quiz.answered=false;
+  $('qFb').innerHTML=''; $('qNext').classList.add('hidden'); $('qSubmit').classList.add('hidden');
+  $('qOpts').innerHTML = q.opts.map(o=>
+    `<div class="opt" data-k="${o[0]}" onclick="pickOpt('${o[0]}')"><div class="k">${o[0]}</div><div>${esc(o[1])}</div></div>`
+  ).join('');
+  if(q.type==='multi') $('qSubmit').classList.remove('hidden');
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function pickOpt(k){
+  if(quiz.answered) return;
+  const q=curQ();
+  if(q.type==='multi'){
+    const i=quiz.sel.indexOf(k);
+    if(i>=0) quiz.sel.splice(i,1); else quiz.sel.push(k);
+    document.querySelectorAll('#qOpts .opt').forEach(el=>el.classList.toggle('sel', quiz.sel.includes(el.dataset.k)));
+  } else {
+    quiz.sel=[k];
+    document.querySelectorAll('#qOpts .opt').forEach(el=>el.classList.toggle('sel', el.dataset.k===k));
+    judge();
+  }
+}
+function submitMulti(){ if(!quiz.sel.length){ toast('请至少选一项'); return; } judge(); }
+
+function judge(){
+  const q=curQ();
+  quiz.answered=true;
+  $('qSubmit').classList.add('hidden');
+  const mine=[...quiz.sel].sort().join('');
+  const right=[...q.ans].sort().join('');
+  const ok = mine===right;
+  const s=st(q.id);
+  s.last=Date.now();
+  if(ok){ s.c++; s.streak++; quiz.right++; } else { s.w++; s.streak=0; quiz.wrongIds.push(q.id); }
+  quiz.total++;
+  save();
+
+  document.querySelectorAll('#qOpts .opt').forEach(el=>{
+    const k=el.dataset.k;
+    el.classList.remove('sel');
+    if(q.ans.includes(k)) el.classList.add('ok');
+    else if(quiz.sel.includes(k)) el.classList.add('bad');
+    el.style.pointerEvents='none';
+  });
+
+  const ansTxt = q.ans.map(k=>{ const o=q.opts.find(x=>x[0]===k); return k+(o?' '+esc(o[1]):''); }).join('；');
+  $('qFb').innerHTML = `
+    <div class="fb ${ok?'ok':'bad'}">
+      <div class="ttl">${ok?'✓ 回答正确':'✗ 回答错误'}</div>
+      <div class="ans"><b>正确答案：</b>${ansTxt}</div>
+      <div class="exp"><b>解析：</b>${esc(q.exp)}</div>
+      <div class="cnt">本题累计：答对 ${s.c} 次 · 答错 <b>${s.w}</b> 次 ${s.streak>=S.set.mastery?'· 已掌握':''}</div>
+    </div>`;
+  $('qNext').classList.remove('hidden');
+  $('qNext').textContent = (quiz.idx===quiz.pool.length-1) ? '查看本轮结果' : '下一题';
+  $('qBar').style.width = Math.round((quiz.idx+1)*100/quiz.pool.length)+'%';
+}
+function nextQ(){
+  if(quiz.idx < quiz.pool.length-1){ quiz.idx++; renderQ(); }
+  else finishRound();
+}
+function finishRound(){
+  const pct = quiz.total? Math.round(quiz.right*100/quiz.total):0;
+  $('rPct').textContent = pct+'%';
+  $('rSub').textContent = `共 ${quiz.total} 题 · 答对 ${quiz.right} · 答错 ${quiz.wrongIds.length}`;
+  const wrong = quiz.wrongIds.map(id=>BANK.find(q=>q.id===id)).filter(Boolean);
+  $('rWrongList').innerHTML = wrong.length ? wrong.map(q=>`
+    <div class="listitem" style="cursor:default">
+      <div class="t">${esc(q.q)}</div>
+      <div class="m"><span>${q.ch}</span><span class="badge w">答错 ${(S.stats[q.id]||{}).w} 次</span><span>正确：${q.ans.join('')}</span></div>
+    </div>`).join('') : '<div class="empty">本轮全对，太强了 🎉</div>';
+  $('rRetryBtn').classList.toggle('hidden', !wrong.length);
+  show('result');
+}
+function retryWrongRound(){
+  if(!quiz || !quiz.wrongIds.length) return;
+  startQuiz('roundwrong', quiz.wrongIds.slice());
+}
+
+/* ---------- lists ---------- */
+function showWrongbook(){
+  const list = BANK.filter(q=>((S.stats[q.id]||{}).w||0)>0)
+      .sort((a,b)=>(S.stats[b.id].w-S.stats[a.id].w));
+  renderList('错题本（按答错次数排序）', list);
+}
+function showAllStats(){
+  const list = BANK.slice().sort((a,b)=>{
+    const A=S.stats[a.id]||{w:0,c:0}, B=S.stats[b.id]||{w:0,c:0};
+    return (B.w-A.w) || (A.c-B.c);
+  });
+  renderList('全部题目 · 答错统计', list);
+}
+function renderList(title, list){
+  $('ttl').textContent = title;
+  $('sub').textContent = list.length + ' 题';
+  $('detailBox').classList.add('hidden');
+  $('listBox').classList.remove('hidden');
+  if(!list.length){ $('listBox').innerHTML='<div class="empty">暂无记录</div>'; show('list'); return; }
+  $('listBox').innerHTML = list.map(q=>{
+    const s=S.stats[q.id]||{c:0,w:0,streak:0};
+    return `<div class="listitem" onclick="showDetail('${q.id}')">
+      <div class="t">${esc(q.q)}</div>
+      <div class="m">
+        <span>${q.ch}</span>
+        <span class="badge w">错 ${s.w}</span>
+        <span class="badge g">对 ${s.c}</span>
+        ${s.streak>=S.set.mastery?'<span class="badge n">已掌握</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+  show('list');
+}
+function showDetail(id){
+  const q=BANK.find(x=>x.id===id); const s=S.stats[id]||{c:0,w:0,streak:0};
+  $('listBox').classList.add('hidden');
+  const box=$('detailBox'); box.classList.remove('hidden');
+  box.innerHTML = `
+    <div class="qhead"><span class="tag">${q.ch}</span><span class="muted">错 ${s.w} · 对 ${s.c}</span></div>
+    <div class="qtext">${esc(q.q)}</div>
+    ${q.opts.map(o=>`<div class="opt ${q.ans.includes(o[0])?'ok':''}" style="pointer-events:none"><div class="k">${o[0]}</div><div>${esc(o[1])}</div></div>`).join('')}
+    <div class="fb ok" style="margin-top:14px">
+      <div class="ttl">答案：${q.ans.join('')}</div>
+      <div class="exp">${esc(q.exp)}</div>
+    </div>
+    <button class="btn ghost" onclick="showWrongbook()">返回列表</button>`;
+  show('list');
+}
+
+/* ---------- settings ---------- */
+function showSettings(){ $('setMastery').value=String(S.set.mastery); show('settings'); }
+function setMastery(v){ S.set.mastery=parseInt(v,10)||2; save(); toast('已保存'); }
+function resetAll(){
+  if(!confirm('确定清空所有答题记录？（题库不受影响）')) return;
+  S={stats:{}, set:S.set}; save(); toast('已清空'); goHome();
+}
+async function exportData(){
+  const txt=JSON.stringify(S);
+  try{ await navigator.clipboard.writeText(txt); toast('已复制到剪贴板'); }
+  catch(e){ prompt('复制下面内容保存：', txt); }
+}
+function importData(){
+  const t=$('impBox').value.trim(); if(!t) return;
+  try{ const j=JSON.parse(t); if(!j.stats) throw 0;
+    S={stats:j.stats, set:Object.assign({mastery:2, count:15}, j.set||{})}; save(); toast('导入成功'); goHome();
+  }catch(e){ toast('格式不对'); }
+}
+
+/* ---------- init ---------- */
+renderHome(); show('home');
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js', {updateViaCache:'none'})
+    .then(reg => { reg.update().catch(()=>{}); })
+    .catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(sessionStorage.getItem('sw_reloaded')) return;
+    sessionStorage.setItem('sw_reloaded','1');
+    location.reload();
+  });
+}
+
+async function forceUpdate(){
+  try{
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r=>r.unregister()));
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+  }catch(e){}
+  location.replace(location.pathname + '?t=' + Date.now());
+}
+</script>
+</body>
+</html>
