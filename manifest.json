@@ -1,0 +1,14 @@
+{
+  "name": "无线通信 · 刷题",
+  "short_name": "无线刷题",
+  "description": "雨课堂无线通信选择题题库 · 反复刷题直到掌握",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f6f8",
+  "theme_color": "#1f6feb",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
